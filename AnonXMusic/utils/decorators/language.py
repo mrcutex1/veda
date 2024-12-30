@@ -1,10 +1,12 @@
 from AnonXMusic.misc import SUDOERS
 from AnonXMusic.utils.database import get_lang, is_maintenance
 from strings import get_string
-
+from config import SUPPORT_CHAT
+from AnonXMusic import app
+from pyrogram.types import Message
 
 def language(mystic):
-    async def wrapper(_, message, **kwargs):
+    async def wrapper(_, message:Message, **kwargs):
         if await is_maintenance() is False:
             if message.from_user.id not in SUDOERS:
                 return await message.reply_text(

@@ -1,7 +1,7 @@
 from typing import Union
 
 from pyrogram import filters, types
-from pyrogram.types import InlineKeyboardMarkup, Message
+from pyrogram.types import InlineKeyboardMarkup, Message, CallbackQuery
 
 from AnonXMusic import app
 from AnonXMusic.utils import help_pannel
@@ -15,7 +15,7 @@ from strings import get_string, helpers
 @app.on_message(filters.command(["help"]) & filters.private & ~BANNED_USERS)
 @app.on_callback_query(filters.regex("settings_back_helper") & ~BANNED_USERS)
 async def helper_private(
-    client: app, update: Union[types.Message, types.CallbackQuery]
+    client, update: Union[types.Message, types.CallbackQuery]
 ):
     is_callback = isinstance(update, types.CallbackQuery)
     if is_callback:
@@ -54,7 +54,7 @@ async def help_com_group(client, message: Message, _):
 
 @app.on_callback_query(filters.regex("help_callback") & ~BANNED_USERS)
 @languageCB
-async def helper_cb(client, CallbackQuery, _):
+async def helper_cb(client, CallbackQuery:CallbackQuery, _):
     callback_data = CallbackQuery.data.strip()
     cb = callback_data.split(None, 1)[1]
     keyboard = help_back_markup(_)
