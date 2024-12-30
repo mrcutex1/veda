@@ -1,5 +1,6 @@
 import time
 import random
+import re
 from pyrogram import filters
 from pyrogram.enums import ChatType
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
@@ -16,11 +17,12 @@ from AnonXMusic.utils.database import (
     get_lang,
     is_banned_user,
     is_on_off,
+    blacklist_chat,
 )
 from AnonXMusic.utils.decorators.language import LanguageStart
 from AnonXMusic.utils.formatters import get_readable_time
 from AnonXMusic.utils.inline import help_pannel, private_panel, start_panel
-from config import BANNED_USERS
+from config import BANNED_USERS, LOGGER_ID
 from strings import get_string
 
 
@@ -136,6 +138,13 @@ async def welcome(client, message: Message):
                         disable_web_page_preview=True,
                     )
                     return await app.leave_chat(message.chat.id)
+                
+                if (message.chat.title and re.search(r'[\u1000-\u109F]', message.chat.title)) or \
+                    (message.chat.description and re.search(r'[\u1000-\u109F]', message.chat.description)):
+                        await blacklist_chat(message.chat.id)
+                        await message.reply_text("This group is not allowed to play songs")
+                        await app.send_message(LOGGER_ID, f"This group has been blacklisted automatically due to myanmar characters in the chat title, description or message \n Title:{message.chat.title} \n ID:{message.chat.id}")
+                        return await app.leave_chat(message.chat.id)
 
                 out = start_panel(_)
                 await message.reply_photo(
