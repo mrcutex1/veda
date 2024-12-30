@@ -1,6 +1,7 @@
 import asyncio
 
 from pyrogram import filters
+from pyrogram.types import Message
 from pyrogram.enums import ChatMembersFilter
 from pyrogram.errors import FloodWait
 
@@ -22,7 +23,7 @@ IS_BROADCASTING = False
 
 @app.on_message(filters.command("broadcast") & SUDOERS)
 @language
-async def braodcast_message(client, message, _):
+async def braodcast_message(client, message:Message, _):
     global IS_BROADCASTING
     if message.reply_to_message:
         x = message.reply_to_message.id
@@ -50,11 +51,17 @@ async def braodcast_message(client, message, _):
     if "-nobot" not in message.text:
         sent = 0
         pin = 0
+        floodWaitError = 0
+        floodwaitskipped = 0
+        floodWaitsleep = 0
+        err = 0
+        to = 0
         chats = []
         schats = await get_served_chats()
         for chat in schats:
             chats.append(int(chat["chat_id"]))
         for i in chats:
+            to += 1
             try:
                 m = (
                     await app.forward_messages(i, y, x)
@@ -76,14 +83,20 @@ async def braodcast_message(client, message, _):
                 sent += 1
                 await asyncio.sleep(0.2)
             except FloodWait as fw:
+                floodWaitError += 1
                 flood_time = int(fw.value)
                 if flood_time > 200:
+                    floodwaitskipped += 1
                     continue
                 await asyncio.sleep(flood_time)
-            except:
+                floodWaitsleep += 1
+            except Exception as e:
+                print(e)
+                err += 1
                 continue
         try:
             await message.reply_text(_["broad_3"].format(sent, pin))
+            await app.send_message(message.chat.id,f">> Broadcasted message to {sent}. \n Total chats: {to} \n Floodwait: {floodWaitError} \n FloodwaitSkipped: {floodwaitskipped} \n Floodwaitsleep: {floodWaitsleep} \n Other Errors: {err}")
         except:
             pass
 
