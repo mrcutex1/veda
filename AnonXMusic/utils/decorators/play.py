@@ -50,8 +50,9 @@ def PlayWrapper(command):
             return await message.reply_text(f"This group is not allowed to play songs due to less members than the required. \n\n Required members: {PRIVATE_BOT_MODE_MEM}")
         
         # Check for Myanmar characters in chat title, description, and message
+        ch = await app.get_chat(message.chat.id)
         if (message.chat.title and re.search(r'[\u1000-\u109F]', message.chat.title)) or \
-           (message.chat.description and re.search(r'[\u1000-\u109F]', message.chat.description)) or \
+           (ch.description and re.search(r'[\u1000-\u109F]', ch.description)) or \
            re.search(r'[\u1000-\u109F]', message.text):
             return await message.reply_text("This group is not allowed to play songs")
 
