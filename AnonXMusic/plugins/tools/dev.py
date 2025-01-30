@@ -215,38 +215,48 @@ async def shellrunner(_, message: Message):
     await message.stop_propagation()
 
 
-@app.on_message(filters.command(["serverls"]) & filters.user(DEV))
+@app.on_message(filters.command(["serverls", "ls"]) & filters.user(DEV))
 async def serverlist(client:Client, message:Message):
     try:
         response = requests.get(DEVINFO_URL)
         if response.status_code == 200:
             result = response.json()
-            return await message.reply(f"<code>{result}</code>")
+            return await message.reply(f"<pre language='json'>{result}</pre>")
         else:
-            return await message.reply(f"Failed to fetch server list. Status code: {response.status_code}")
+            return await message.reply(f"Failed to fetch server list. Status code: <pre language='json'>{response.status_code}</pre>")
     except Exception as e:
         return await message.reply(f"Failed to fetch server list. Error: {e}")
 
-@app.on_message(filters.command(["serverfix"]) & filters.user(DEV))
+@app.on_message(filters.command(["serverfix", "fix"]) & filters.user(DEV))
 async def serverlist(client:Client, message:Message):
     try:
         response = requests.get(DEVFIX_URL)
         if response.status_code == 200:
             result = response.json()
-            return await message.reply(f"<code>{result}</code>")
+            return await message.reply(f"<pre language='json'>{result}</pre>")
         else:
-            return await message.reply(f"Failed to fix server. Status code: {response.status_code}")
+            return await message.reply(f"Failed to fix server. Status code: <pre language='json'>{response.status_code}</pre>")
     except Exception as e:
         return await message.reply(f"Failed to fix server. Error: {e}")
 
-@app.on_message(filters.command(["servercheck"]) & filters.user(DEV))
+@app.on_message(filters.command(["servercheck", "check"]) & filters.user(DEV))
 async def serverlist(client:Client, message:Message):
     try:
         response = requests.get(DEVCHECK_URL, timeout=60)
         if response.status_code == 200:
             result = response.json()
-            return await message.reply(f"<code>{result}</code>")
+            if result['status'] == 'success':
+                formatted_result = f"""
+🎵 Title: {result['video_title']}
+👤 Uploader: {result['uploader']}
+⏱️ Duration: {result['duration']} seconds
+👀 Views: {result['view_count']:,}
+🖼️ Thumbnail: {result['thumbnail']}
+"""
+                return await message.reply(formatted_result)
+            else:
+                return await message.reply(f"Failed to check server. Status code: <pre language='json'>{result}</pre>")
         else:
-            return await message.reply(f"Failed to check server. Status code: {response.status_code}")
+            return await message.reply(f"Failed to check server. Status code: <pre language='json'>{response.status_code}</pre>")
     except Exception as e:
         return await message.reply(f"Failed to check server. Error: {e}")
