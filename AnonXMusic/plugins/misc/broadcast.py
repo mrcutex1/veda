@@ -17,6 +17,8 @@ from AnonXMusic.utils.database import (
 from AnonXMusic.utils.decorators.language import language
 from AnonXMusic.utils.formatters import alpha_to_int
 from config import adminlist
+from AnonXMusic import LOGGER
+
 
 IS_BROADCASTING = False
 
@@ -91,7 +93,7 @@ async def braodcast_message(client, message:Message, _):
                 await asyncio.sleep(flood_time)
                 floodWaitsleep += 1
             except Exception as e:
-                print(e)
+                LOGGER(__name__).info(e)
                 err += 1
                 continue
         try:

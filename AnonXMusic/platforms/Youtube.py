@@ -11,7 +11,7 @@ from youtubesearchpython.__future__ import VideosSearch
 
 from AnonXMusic.utils.database import is_on_off
 from AnonXMusic.utils.formatters import time_to_seconds
-
+from AnonXMusic import LOGGER
 
 
 import os
@@ -330,14 +330,14 @@ class YouTubeAPI:
         def audio_dl():
             err = False
             try:
-                res = requests.get(f"https://yt.okflix.top/api/{vid_id}" ,timeout=5)
+                res = requests.get(f"https://yt.okflix.top/api/{vid_id}" ,timeout=10)
                 response = res.json()
                 if response['status'] == 'success':
-                    print("Downloaded from okflix")
+                    LOGGER(__name__).info("Downloaded from okflix")
                     return response['download_link']
                 err = True
             except Exception as e:
-                print(e)
+                LOGGER(__name__).info(f"Error in downloading song from okflix: {e}")
                 err = True
             if err:
                 ydl_optssx = {
@@ -466,5 +466,4 @@ class YouTubeAPI:
         else:
             direct = True
             downloaded_file = await loop.run_in_executor(None, audio_dl)
-            print(downloaded_file)
         return downloaded_file, direct
