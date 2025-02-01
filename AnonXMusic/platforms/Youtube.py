@@ -331,7 +331,7 @@ class YouTubeAPI:
         def audio_dl():
             err = False
             try:
-                res = requests.get(f"{YTPROXY}/{vid_id}", timeout=10)
+                res = requests.get(f"{YTPROXY}/{vid_id}", timeout=30)
                 response = res.json()
                 if response['status'] == 'success':
                     fpath = f"downloads/{vid_id}.mp3"
