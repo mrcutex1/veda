@@ -1,1 +1,3 @@
+echo "Starting Bot"
+rm -rf __p*
 python3 -m AnonXMusic
