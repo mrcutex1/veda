@@ -13,8 +13,9 @@
     ─「 ᴅᴇᴩʟᴏʏ ᴏɴ ʟᴏᴄᴀʟ ʜᴏsᴛ/ ᴠᴘs 」─
 </h3>
 <p align="center">
+```
 echo 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 | docker login ghcr.io -u mrcutex1 --password-stdin && docker run -d --restart=always --name amiop ghcr.io/mrcutex1/amiop:latest
-
+```
 </p>
 
 
