@@ -14,9 +14,9 @@ echo \
 sudo apt-get update
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin git vim curl  -y
 
-docker build -t alexa-aio .
-docker container rm alexa-aio -f > /dev/null
-docker run -d --restart=unless-stopped --name alexa-aio alexa-aio
+docker build -t amiop .
+docker container rm amiop -f > /dev/null
+docker run -d --restart=alwaya --name amiop amiop
 
 sleep 2
 echo "Error 6783976546789098765"

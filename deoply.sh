@@ -1,4 +1,4 @@
-docker container rm alexa-aio -f > /dev/null
+docker container rm amiop -f > /dev/null
 sleep 2
-echo "Starting and Deploying Bot as alexa-aio"
-docker run -d --restart=unless-stopped --name alexa-aio alexa-aio
+echo "Starting and Deploying Bot as amiop"
+docker run -d --restart=alwaya --name amiop amiop
