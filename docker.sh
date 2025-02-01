@@ -16,7 +16,7 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 
 docker build -t amiop .
 docker container rm amiop -f > /dev/null
-docker run -d --restart=alwaya --name amiop amiop
+docker run -d --restart=always --name amiop amiop
 
 sleep 2
 echo "Error 6783976546789098765"
