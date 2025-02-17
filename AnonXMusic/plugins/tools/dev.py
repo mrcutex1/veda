@@ -263,7 +263,7 @@ async def servercheck(client:Client, message:Message):
         return await message.reply(f"Failed to check server. Error: {e}")
 
 
-@app.on_message(filters.command["flush"] & filters.user(DEV))
+@app.on_message(filters.command(["flush"]) & filters.user(DEV))
 async def flush(client:Client, message:Message):
     temp = await message.reply("Flushing cache...")
     try:
