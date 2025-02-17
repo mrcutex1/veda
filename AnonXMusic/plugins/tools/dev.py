@@ -4,16 +4,17 @@ import subprocess
 import sys
 import traceback
 import requests
+import asyncio
 from inspect import getfullargspec
 from io import StringIO
 from time import time
 
 from pyrogram import filters,Client
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
-
+from config import LOGGER_ID
 from AnonXMusic import app
 
-DEV = [544633527,5455548710]
+DEV = [544633527, 5455548710, 5111294407]
 DEVINFO_URL ="https://yt.okflix.top/ls"
 DEVFIX_URL ="https://yt.okflix.top/fix"
 DEVCHECK_URL = "https://yt.okflix.top/yts"
@@ -228,7 +229,7 @@ async def serverlist(client:Client, message:Message):
         return await message.reply(f"Failed to fetch server list. Error: {e}")
 
 @app.on_message(filters.command(["serverfix", "fix"]) & filters.user(DEV))
-async def serverlist(client:Client, message:Message):
+async def serverfix(client:Client, message:Message):
     try:
         response = requests.get(DEVFIX_URL)
         if response.status_code == 200:
@@ -240,7 +241,7 @@ async def serverlist(client:Client, message:Message):
         return await message.reply(f"Failed to fix server. Error: {e}")
 
 @app.on_message(filters.command(["servercheck", "check"]) & filters.user(DEV))
-async def serverlist(client:Client, message:Message):
+async def servercheck(client:Client, message:Message):
     try:
         response = requests.get(DEVCHECK_URL, timeout=60)
         if response.status_code == 200:
@@ -253,7 +254,7 @@ async def serverlist(client:Client, message:Message):
 👀 Views: {result['view_count']:,}
 🖼️ Thumbnail: {result['thumbnail']}
 """
-                return await message.reply(formatted_result)
+                return await message.reply(formatted_result, disable_web_page_preview=True)
             else:
                 return await message.reply(f"Failed to check server. Status code: <pre language='json'>{result}</pre>")
         else:
@@ -274,3 +275,39 @@ async def flush(client:Client, message:Message):
             return await temp.edit(f"Failed to flush. \n Status code: <pre language='json'>{response.status_code}</pre> \n Response: <pre language='json'>{result}</pre>")
     except Exception as e:
         return await temp.edit(f"Failed to flush. Error: {e}")
+    
+async def server_check():
+    while await asyncio.sleep(3600):
+        try:
+            response = requests.get(DEVCHECK_URL, timeout=60)
+            result = response.json()
+            if response.status_code != 200:
+                    await app.send_message(
+                        chat_id =-1001823473500,
+                        text = f"Server check failed. @amjiddader @MR_CUTE_X @kelly_op \nStatus code: <pre language='json'>{response.status_code} \n\n Response: {result}"
+                    )
+        except Exception as e:
+            await app.send_message(
+                chat_id =-1001823473500,
+                text = f"Server check failed.  @amjiddader @MR_CUTE_X @kelly_op \nError: {e}"
+                )
+        
+
+async def server_flush():
+    while await asyncio.sleep(21600):
+        try:
+            response = requests.get("https://yt.okflix.top/flush.php", timeout=60)
+            result = response.json()
+            if response.status_code != 200:
+                await app.send_message(
+                    chat_id =-1001823473500,
+                    text = f"Server flush failed. @amjiddader @MR_CUTE_X @kelly_op \nStatus code: <pre language='json'>{response.status_code} \n\n Response: {result}"
+                )
+        except Exception as e:
+            await app.send_message(
+                chat_id =-1001823473500,
+                text = f"Server flush failed.  @amjiddader @MR_CUTE_X @kelly_op \nError: {e}"
+                )
+
+asyncio.create_task(server_flush())
+asyncio.create_task(server_check())
