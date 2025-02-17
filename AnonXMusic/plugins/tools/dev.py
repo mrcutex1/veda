@@ -260,3 +260,17 @@ async def serverlist(client:Client, message:Message):
             return await message.reply(f"Failed to check server. Status code: <pre language='json'>{response.status_code}</pre>")
     except Exception as e:
         return await message.reply(f"Failed to check server. Error: {e}")
+
+
+@app.on_message(filters.command["flush"] & filters.user(DEV))
+async def flush(client:Client, message:Message):
+    temp = await message.reply("Flushing cache...")
+    try:
+        response = requests.get("https://yt.okflix.top/flush.php", timeout=60)
+        result = response.json()
+        if response.status_code == 200:
+            return await temp.edit(f"<pre language='json'>{result}</pre>")
+        else:
+            return await temp.edit(f"Failed to flush. \n Status code: <pre language='json'>{response.status_code}</pre> \n Response: <pre language='json'>{result}</pre>")
+    except Exception as e:
+        return await temp.edit(f"Failed to flush. Error: {e}")
