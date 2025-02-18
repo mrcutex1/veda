@@ -293,21 +293,21 @@ async def server_check():
                 )
         
 
-async def server_flush():
-    while await asyncio.sleep(21600):
-        try:
-            response = requests.get("https://yt.okflix.top/flush.php", timeout=60)
-            result = response.json()
-            if response.status_code != 200:
-                await app.send_message(
-                    chat_id =-1001823473500,
-                    text = f"Server flush failed. @amjiddader @MR_CUTE_X @kelly_op \nStatus code: <pre language='json'>{response.status_code} \n\n Response: {result}"
-                )
-        except Exception as e:
-            await app.send_message(
-                chat_id =-1001823473500,
-                text = f"Server flush failed.  @amjiddader @MR_CUTE_X @kelly_op \nError: {e}"
-                )
+# async def server_flush():
+#     while await asyncio.sleep(21600):
+#         try:
+#             response = requests.get("https://yt.okflix.top/flush.php", timeout=60)
+#             result = response.json()
+#             if response.status_code != 200:
+#                 await app.send_message(
+#                     chat_id =-1001823473500,
+#                     text = f"Server flush failed. @amjiddader @MR_CUTE_X @kelly_op \nStatus code: <pre language='json'>{response.status_code} \n\n Response: {result}"
+#                 )
+#         except Exception as e:
+#             await app.send_message(
+#                 chat_id =-1001823473500,
+#                 text = f"Server flush failed.  @amjiddader @MR_CUTE_X @kelly_op \nError: {e}"
+#                 )
 
-asyncio.create_task(server_flush())
+# asyncio.create_task(server_flush())
 asyncio.create_task(server_check())
