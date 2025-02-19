@@ -16,6 +16,7 @@ from AnonXMusic.plugins import ALL_MODULES
 from AnonXMusic.utils.database import get_served_chats, get_served_users, get_sudoers
 from AnonXMusic.utils.decorators.language import language, languageCB
 from AnonXMusic.utils.inline.stats import back_stats_buttons, stats_buttons
+from AnonXMusic.utils.formatters import seconds_to_min
 from config import BANNED_USERS
 
 
@@ -61,7 +62,7 @@ async def overall_stats(client, CallbackQuery, _):
         len(ALL_MODULES),
         len(SUDOERS),
         config.AUTO_LEAVING_ASSISTANT,
-        config.DURATION_LIMIT_MIN,
+        seconds_to_min(config.DURATION_LIMIT),
     )
     med = InputMediaPhoto(media=config.STATS_IMG_URL, caption=text)
     try:
