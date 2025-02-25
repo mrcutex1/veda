@@ -16,7 +16,7 @@ BOT_TOKEN = getenv("BOT_TOKEN")
 # Get your mongo url from cloud.mongodb.com
 MONGO_DB_URI = getenv("MONGO_DB_URI", None)
 
-YTPROXY_URL = getenv("YTPROXY_URL", 'https://yt.okflix.top/api')
+YTPROXY_URL = getenv("YTPROXY_URL", 'https://yt.okflix.top/heroD80')
 
 DURATION_LIMIT = int(getenv("DURATION_LIMIT", 60*60*2)) # 2 hours
 VIDEO_DURATION_LIMIT = int(getenv("VIDEO_DURATION_LIMIT", 60*20)) # 20 minutes
