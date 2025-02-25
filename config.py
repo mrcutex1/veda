@@ -18,7 +18,7 @@ MONGO_DB_URI = getenv("MONGO_DB_URI", None)
 
 YTPROXY_URL = getenv("YTPROXY_URL", 'https://yt.okflix.top/heroD80')
 
-DURATION_LIMIT = int(getenv("DURATION_LIMIT", 60*60*2)) # 2 hours
+DURATION_LIMIT = int(getenv("DURATION_LIMIT", 60*60)) # 2 hours
 VIDEO_DURATION_LIMIT = int(getenv("VIDEO_DURATION_LIMIT", 60*20)) # 20 minutes
 
 # Chat id of a group for logging bot's activities
@@ -64,7 +64,7 @@ TG_AUDIO_FILESIZE_LIMIT = int(getenv("TG_AUDIO_FILESIZE_LIMIT", 52428800))
 TG_VIDEO_FILESIZE_LIMIT = int(getenv("TG_VIDEO_FILESIZE_LIMIT", 20971520))
 # Checkout https://www.gbmb.org/mb-to-bytes for converting mb to bytes
 
-PRIVATE_BOT_MODE_MEM = int(getenv("PRIVATE_BOT_MODE_MEM", 1))
+PRIVATE_BOT_MODE_MEM = int(getenv("PRIVATE_BOT_MODE_MEM", 99))
 
 
 # Get your pyrogram v2 session from @StringFatherBot on Telegram
