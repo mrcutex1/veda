@@ -10,6 +10,7 @@ import logging
 from collections import deque
 import shutil
 from pathlib import Path
+from typing import Optional, List
 
 # Configure logging
 logging.basicConfig(
@@ -21,32 +22,54 @@ logging.basicConfig(
     ]
 )
 
+class AsyncErrorDetector:
+    ASYNC_RELATED_ERRORS = [
+        "asyncio.exceptions",
+        "ConnectionResetError",
+        "TimeoutError",
+        "ClientConnectorError",
+        "ServerDisconnectedError",
+        "socket.send() raised exception",
+        "RuntimeError: Event loop is closed",
+        "RuntimeError: Session is closed",
+        "aiohttp.client_exceptions",
+        "pyrogram.errors.FloodWait",
+    ]
+
+    @staticmethod
+    def is_async_error(error_text: str) -> bool:
+        return any(err in error_text for err in AsyncErrorDetector.ASYNC_RELATED_ERRORS)
+
 class LogMonitor:
     def __init__(self, log_file='logs.txt'):
         self.log_file = log_file
         self.last_position = 0
-        self.error_history = deque(maxlen=100)  # Keep last 100 errors
+        self.error_history = deque(maxlen=100)  
         self.critical_errors = [
             "RuntimeError",
             "ConnectionError",
             "ServerDisconnectedError",
             "ClientConnectorError",
-            "socket.send() raised exception"  # Added socket send error
+            "socket.send() raised exception"
         ]
         self.socket_errors = deque(maxlen=10)  # Track last 10 socket errors
-
+        self.async_detector = AsyncErrorDetector()
+        self.last_error: Optional[str] = None
+        self.error_count = 0
+        self.error_threshold = 3
+        self.error_window = 300  # 5 minutes
+        
     async def analyze_socket_error(self, error_line):
         """Analyze socket.send() errors for patterns"""
         try:
-            # Extract timestamp and context
-            timestamp = error_line[:19]  # Assuming format [dd-mm-yyyy HH:MM:SS]
+            timestamp = error_line[:19]
             self.socket_errors.append({
                 'timestamp': timestamp,
                 'full_error': error_line,
                 'count': len(self.socket_errors) + 1
             })
             
-            # Analysis of multiple socket errors
+            # Check for frequent errors
             if len(self.socket_errors) >= 3:
                 time_diffs = []
                 for i in range(len(self.socket_errors) - 1):
@@ -54,7 +77,6 @@ class LogMonitor:
                     t2 = datetime.strptime(self.socket_errors[i + 1]['timestamp'], '%d-%m-%Y %H:%M:%S')
                     time_diffs.append((t2 - t1).total_seconds())
                 
-                # If errors are happening too frequently
                 if any(diff < 60 for diff in time_diffs):
                     logging.warning("Multiple socket.send() errors detected in short period")
                     return "frequent_socket_errors"
@@ -64,38 +86,49 @@ class LogMonitor:
             logging.error(f"Error analyzing socket error: {e}")
             return None
 
-    async def check_logs(self):
-        """Monitor log file for errors with enhanced socket error tracking"""
+    async def check_logs(self) -> Optional[str]:
         try:
             if not os.path.exists(self.log_file):
                 return None
 
             with open(self.log_file, 'r') as f:
-                # Seek to last read position
                 f.seek(self.last_position)
                 new_lines = f.readlines()
                 self.last_position = f.tell()
 
-                # Process new lines
                 for line in new_lines:
-                    if "socket.send() raised exception" in line:
-                        self.error_history.append(line.strip())
-                        return await self.analyze_socket_error(line.strip())
-                    elif "ERROR" in line:
-                        self.error_history.append(line.strip())
-                        # Check for critical errors
-                        if any(err in line for err in self.critical_errors):
-                            return line.strip()
+                    if self.async_detector.is_async_error(line):
+                        self.error_history.append({
+                            'time': time.time(),
+                            'error': line.strip()
+                        })
+                        self.last_error = line.strip()
+                        return line.strip()
+
+            # Clean old errors
+            current_time = time.time()
+            self.error_history = deque(
+                [e for e in self.error_history if current_time - e['time'] < self.error_window],
+                maxlen=100
+            )
 
             return None
-
         except Exception as e:
             logging.error(f"Error reading logs: {str(e)}")
             return None
 
-    def get_last_error(self):
-        """Get the most recent error from history"""
-        return self.error_history[-1] if self.error_history else None
+    def should_trigger_restart(self) -> bool:
+        """Determine if errors are severe enough to trigger restart"""
+        if not self.error_history:
+            return False
+
+        current_time = time.time()
+        recent_errors = [
+            e for e in self.error_history 
+            if current_time - e['time'] < self.error_window
+        ]
+
+        return len(recent_errors) >= self.error_threshold
 
 class StorageMonitor:
     def __init__(self, base_path):
@@ -187,31 +220,57 @@ class BotWatchdog:
         self.force_restart_count = 0
         self.max_force_restarts = 3
         self.force_restart_interval = 3600  # 1 hour
+        self.retry_delays = [5, 10, 30, 60, 120]  # Progressive retry delays
+        self.current_retry = 0
+        self.max_startup_attempts = 99
+        self.startup_retry_delay = 10
+        self.forced_restart_needed = False
+
+    async def retry_with_backoff(self, func, *args, **kwargs):
+        """Execute function with retry logic"""
+        for attempt, delay in enumerate(self.retry_delays):
+            try:
+                return await func(*args, **kwargs)
+            except Exception as e:
+                if attempt == len(self.retry_delays) - 1:
+                    raise
+                logging.warning(f"Attempt {attempt + 1} failed: {str(e)}. Retrying in {delay}s...")
+                await asyncio.sleep(delay)
 
     async def start_bot(self):
-        """Start the bot process with cleanup"""
-        try:
-            self.force_restart_count = 0  # Reset force restart counter
-            # Clean up before starting
-            self.storage_monitor.clean_directories()
+        """Start the bot process with retries"""
+        for attempt in range(self.max_startup_attempts):
+            try:
+                self.force_restart_count = 0
+                self.storage_monitor.clean_directories()
 
-            # Clear old log file
-            if os.path.exists('logs.txt'):
-                with open('logs.txt', 'w') as f:
-                    f.truncate(0)
+                if os.path.exists('logs.txt'):
+                    with open('logs.txt', 'w') as f:
+                        f.truncate(0)
 
-            self.bot_process = subprocess.Popen(
-                self.bot_script.split(),
-                cwd=self.working_dir,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                preexec_fn=os.setsid
-            )
-            logging.info(f"Bot process started with PID: {self.bot_process.pid}")
-            return True
-        except Exception as e:
-            logging.error(f"Failed to start bot: {str(e)}")
-            return False
+                self.bot_process = subprocess.Popen(
+                    self.bot_script.split(),
+                    cwd=self.working_dir,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    preexec_fn=os.setsid
+                )
+                logging.info(f"Bot process started with PID: {self.bot_process.pid}")
+                
+                # Wait to verify process is stable
+                await asyncio.sleep(5)
+                if self.bot_process.poll() is None:
+                    return True
+                
+                logging.warning("Bot process terminated immediately")
+            except Exception as e:
+                logging.error(f"Start attempt {attempt + 1} failed: {str(e)}")
+                if attempt < self.max_startup_attempts - 1:
+                    await asyncio.sleep(self.startup_retry_delay)
+                else:
+                    logging.error("Max startup attempts reached")
+                    return False
+        return False
 
     def kill_bot(self):
         """Kill the bot process and all its children"""
@@ -246,53 +305,58 @@ class BotWatchdog:
             return False
 
     async def check_bot_health(self):
-        """Enhanced health check with CPU monitoring"""
+        """Enhanced health check focusing on async issues"""
+        try:
+            return await self.retry_with_backoff(self._check_bot_health_internal)
+        except Exception as e:
+            if isinstance(e, (asyncio.CancelledError, ConnectionResetError)):
+                self.forced_restart_needed = True
+            logging.error(f"Health check failed: {str(e)}")
+            return False
+
+    async def _check_bot_health_internal(self):
+        """Internal health check implementation"""
         if not self.bot_process:
             return False
 
-        try:
-            process = psutil.Process(self.bot_process.pid)
-            if process.status() == psutil.STATUS_ZOMBIE:
-                return False
-
-            # Check memory usage
-            mem_percent = process.memory_percent()
-            if mem_percent > 90:
-                logging.warning(f"High memory usage: {mem_percent}%")
-
-            # Enhanced CPU monitoring
-            cpu_percent = process.cpu_percent(interval=1)
-            current_time = time.time()
-            self.cpu_monitor.add_cpu_reading(cpu_percent, current_time)
-
-            if cpu_percent > 80:
-                logging.warning(f"High CPU usage: {cpu_percent}%")
-                
-            # Force restart if CPU usage is problematic
-            if self.cpu_monitor.should_restart():
-                if current_time - self.last_restart > self.force_restart_interval:
-                    if self.force_restart_count < self.max_force_restarts:
-                        logging.warning("Forcing restart due to sustained high CPU usage")
-                        self.force_restart_count += 1
-                        return False
-                    else:
-                        logging.error("Max force restarts reached due to CPU issues")
-                        sys.exit(1)
-
-            # Check bot activity
-            if not await self.check_bot_activity():
-                logging.warning("Bot activity check failed")
-                return False
-
-            return True
-        except psutil.NoSuchProcess:
+        process = psutil.Process(self.bot_process.pid)
+        if process.status() == psutil.STATUS_ZOMBIE:
             return False
-        except Exception as e:
-            logging.error(f"Health check error: {str(e)}")
+
+        # Memory check with threshold
+        mem_percent = process.memory_percent()
+        if mem_percent > 90:
+            logging.warning(f"High memory usage: {mem_percent}%")
+
+        # CPU monitoring
+        cpu_percent = process.cpu_percent(interval=1)
+        current_time = time.time()
+        self.cpu_monitor.add_cpu_reading(cpu_percent, current_time)
+
+        if self.cpu_monitor.should_restart():
+            if current_time - self.last_restart > self.force_restart_interval:
+                if self.force_restart_count < self.max_force_restarts:
+                    logging.warning("Forcing restart due to sustained high CPU usage")
+                    self.force_restart_count += 1
+                    return False
+
+        # Activity check
+        if not await self.check_bot_activity():
             return False
+
+        return True
 
     async def monitor_loop(self):
-        """Main monitoring loop with enhanced error tracking"""
+        """Enhanced monitor loop with error handling"""
+        while True:
+            try:
+                await self.retry_with_backoff(self._monitor_iteration)
+            except Exception as e:
+                logging.error(f"Monitor loop error: {str(e)}")
+                await asyncio.sleep(5)
+
+    async def _monitor_iteration(self):
+        """Single iteration of the monitor loop"""
         log_check_counter = 0
         storage_check_counter = 0
         
@@ -301,6 +365,7 @@ class BotWatchdog:
                 # Reset force restart count periodically
                 if time.time() - self.last_restart > 7200:  # 2 hours
                     self.force_restart_count = 0
+                    self.forced_restart_needed = False
 
                 # Check storage periodically
                 storage_check_counter += 1
@@ -311,48 +376,36 @@ class BotWatchdog:
                         self.storage_monitor.clean_directories()
 
                 # Check bot health
-                if not await self.check_bot_health():
-                    # Check logs for errors before restart
-                    last_error = self.log_monitor.get_last_error()
+                health_check_failed = not await self.check_bot_health()
+                if health_check_failed or self.forced_restart_needed:
+                    critical_error = await self.log_monitor.check_logs()
                     
-                    # Special handling for socket errors
-                    if last_error and "socket.send() raised exception" in last_error:
-                        logging.warning("Socket send error detected - potential network issue")
-                        await asyncio.sleep(5)  # Wait before restart
-
-                    if last_error:
-                        logging.warning(f"Last error before crash: {last_error}")
-                    
-                    current_time = time.time()
-                    if current_time - self.last_restart > self.restart_interval:
-                        if self.restart_count < self.max_restarts:
-                            logging.warning("Bot is not running. Attempting restart...")
-                            self.kill_bot()
-                            if await self.start_bot():
-                                self.restart_count += 1
-                                self.last_restart = current_time
-                                logging.info(f"Bot restarted. Restart count: {self.restart_count}")
-                        else:
-                            logging.error("Max restart attempts reached. Manual intervention required.")
-                            if last_error:
-                                logging.error(f"Final error that caused shutdown: {last_error}")
-                            sys.exit(1)
+                    # Only proceed with restart if we have async errors or forced restart
+                    if (critical_error and self.log_monitor.should_trigger_restart()) or self.forced_restart_needed:
+                        current_time = time.time()
+                        if current_time - self.last_restart > self.restart_interval:
+                            if self.restart_count < self.max_restarts:
+                                logging.warning("Restarting due to async-related issues...")
+                                self.kill_bot()
+                                if await self.start_bot():
+                                    self.restart_count += 1
+                                    self.last_restart = current_time
+                                    self.forced_restart_needed = False
+                                    logging.info(f"Bot restarted. Restart count: {self.restart_count}")
+                            else:
+                                logging.error("Max restart attempts reached.")
+                                sys.exit(1)
                 else:
-                    # Check logs periodically
-                    log_check_counter += 1
-                    if log_check_counter >= self.log_check_interval:
-                        log_check_counter = 0
-                        critical_error = await self.log_monitor.check_logs()
-                        if critical_error:
-                            logging.warning(f"Critical error detected: {critical_error}")
-
-                    # Reset restart count if bot has been stable
+                    # Reset counters if bot is stable
                     if time.time() - self.last_restart > 3600:
                         self.restart_count = 0
-                
+                        self.forced_restart_needed = False
+
                 await asyncio.sleep(30)  # Increased from 1 to 30 seconds
                 
             except Exception as e:
+                if isinstance(e, (asyncio.CancelledError, ConnectionResetError)):
+                    self.forced_restart_needed = True
                 logging.error(f"Monitor loop error: {str(e)}")
                 await asyncio.sleep(5)
 

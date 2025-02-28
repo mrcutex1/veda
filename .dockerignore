@@ -1,5 +1,4 @@
 .cache
-log.txt
 .DS_Store
 *.session
 raw_files/
