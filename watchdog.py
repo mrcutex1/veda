@@ -171,33 +171,38 @@ class StorageMonitor:
 
 class CPUMonitor:
     def __init__(self):
-        self.high_cpu_history = deque(maxlen=60)  # Track 30 minutes of readings (1 reading/30sec)
-        self.cpu_threshold = 99.0  # Increased from 80 to 95%
-        self.critical_cpu_threshold = 98.0  # Increased from 120 to 98%
-        self.high_cpu_duration_threshold = 1800  # 30 minutes (in seconds)
-        self.min_cores_threshold = psutil.cpu_count() // 2  # At least half of CPU cores must be high
+        self.high_cpu_history = deque(maxlen=60)  # Track 30 minutes of readings
+        self.cpu_threshold = 99.0
+        self.critical_cpu_threshold = 98.0
+        self.high_cpu_duration_threshold = 1800  # 30 minutes
+        self.cpu_count = psutil.cpu_count()
         
     def add_cpu_reading(self, process):
-        """Add CPU reading with per-core information"""
+        """Add CPU reading with system-wide CPU info"""
         try:
             current_time = time.time()
             
-            # Get per-core CPU percentages for the process
-            cpu_percent = process.cpu_percent(interval=None)
-            per_core_percent = process.cpu_percent(interval=None, percpu=True)
+            # Get overall system CPU usage
+            system_cpu = psutil.cpu_percent(interval=1, percpu=True)
+            process_cpu = process.cpu_percent(interval=None)
             
-            # Count cores above threshold
-            high_cpu_cores = sum(1 for core in per_core_percent if core > self.cpu_threshold)
+            # Count high CPU cores
+            high_cpu_cores = sum(1 for core in system_cpu if core > self.cpu_threshold)
             
             self.high_cpu_history.append({
                 'time': current_time,
-                'overall_cpu': cpu_percent,
+                'system_cpu': sum(system_cpu) / len(system_cpu),  # Average CPU
+                'process_cpu': process_cpu,
                 'high_cpu_cores': high_cpu_cores,
-                'total_cores': len(per_core_percent)
+                'total_cores': self.cpu_count
             })
             
+            # Log if CPU usage is high
+            if high_cpu_cores > (self.cpu_count // 2):
+                logging.warning(f"High CPU detected - Process: {process_cpu}%, System average: {sum(system_cpu)/len(system_cpu)}%, Cores above threshold: {high_cpu_cores}/{self.cpu_count}")
+            
         except Exception as e:
-            logging.error(f"Error monitoring CPU: {e}")
+            logging.error(f"Error monitoring CPU: {str(e)}")
 
     def should_restart(self) -> bool:
         """Determine if CPU usage warrants a restart"""
@@ -214,14 +219,19 @@ class CPUMonitor:
         # Count readings where CPU usage is problematic
         critical_readings = 0
         for reading in self.high_cpu_history:
-            # Check if overall CPU is critical
-            if reading['overall_cpu'] > self.critical_cpu_threshold:
-                # Verify that at least half of cores are high
-                if reading['high_cpu_cores'] >= self.min_cores_threshold:
-                    critical_readings += 1
+            # Check both system and process CPU
+            if (reading['system_cpu'] > self.critical_cpu_threshold and 
+                reading['process_cpu'] > self.critical_cpu_threshold and
+                reading['high_cpu_cores'] > (self.cpu_count // 2)):
+                critical_readings += 1
         
         # Only restart if 90% of readings in the last 30 minutes were critical
-        return (critical_readings / len(self.high_cpu_history)) > 0.9
+        critical_percentage = (critical_readings / len(self.high_cpu_history))
+        if critical_percentage > 0.9:
+            logging.warning(f"Critical CPU usage detected over 30 minutes: {critical_percentage*100:.1f}% of readings were critical")
+            return True
+            
+        return False
 
 class BotWatchdog:
     def __init__(self):
@@ -279,7 +289,6 @@ class BotWatchdog:
                 )
                 logging.info(f"Bot process started with PID: {self.bot_process.pid}")
                 
-                # Wait to verify process is stable
                 await asyncio.sleep(5)
                 if self.bot_process.poll() is None:
                     return True
@@ -315,7 +324,6 @@ class BotWatchdog:
     async def check_bot_activity(self):
         """Check if bot is actually responding and working"""
         try:
-            # Check if logs have been updated recently
             if os.path.exists('logs.txt'):
                 last_modified = os.path.getmtime('logs.txt')
                 if time.time() - last_modified > self.activity_timeout:
@@ -345,12 +353,10 @@ class BotWatchdog:
         if process.status() == psutil.STATUS_ZOMBIE:
             return False
 
-        # Memory check with threshold
         mem_percent = process.memory_percent()
         if mem_percent > 90:
             logging.warning(f"High memory usage: {mem_percent}%")
 
-        # Enhanced CPU monitoring
         self.cpu_monitor.add_cpu_reading(process)
         
         if self.cpu_monitor.should_restart():
@@ -361,7 +367,6 @@ class BotWatchdog:
                     self.force_restart_count += 1
                     return False
 
-        # Activity check
         if not await self.check_bot_activity():
             return False
 
@@ -383,12 +388,10 @@ class BotWatchdog:
         
         while True:
             try:
-                # Reset force restart count periodically
                 if time.time() - self.last_restart > 7200:  # 2 hours
                     self.force_restart_count = 0
                     self.forced_restart_needed = False
 
-                # Check storage periodically
                 storage_check_counter += 1
                 if storage_check_counter >= self.storage_check_interval:
                     storage_check_counter = 0
@@ -396,12 +399,10 @@ class BotWatchdog:
                         logging.warning("Low storage space detected, cleaning directories")
                         self.storage_monitor.clean_directories()
 
-                # Check bot health
                 health_check_failed = not await self.check_bot_health()
                 if health_check_failed or self.forced_restart_needed:
                     critical_error = await self.log_monitor.check_logs()
                     
-                    # Only proceed with restart if we have async errors or forced restart
                     if (critical_error and self.log_monitor.should_trigger_restart()) or self.forced_restart_needed:
                         current_time = time.time()
                         if current_time - self.last_restart > self.restart_interval:
@@ -417,7 +418,6 @@ class BotWatchdog:
                                 logging.error("Max restart attempts reached.")
                                 sys.exit(1)
                 else:
-                    # Reset counters if bot is stable
                     if time.time() - self.last_restart > 3600:
                         self.restart_count = 0
                         self.forced_restart_needed = False
