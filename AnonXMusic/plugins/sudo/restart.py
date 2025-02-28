@@ -123,15 +123,16 @@ async def restart_(_, message):
             await remove_active_chat(x)
             await remove_active_video_chat(x)
         except:
-            pass
-
+            pass 
+  
     try:
         shutil.rmtree("downloads")
         shutil.rmtree("raw_files")
         shutil.rmtree("cache")
+        ## Delete junk
     except:
         pass
     await response.edit_text(
         "» ʀᴇsᴛᴀʀᴛ ᴘʀᴏᴄᴇss sᴛᴀʀᴛᴇᴅ, ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ ғᴏʀ ғᴇᴡ sᴇᴄᴏɴᴅs ᴜɴᴛɪʟ ᴛʜᴇ ʙᴏᴛ sᴛᴀʀᴛs..."
     )
-    os.system(f"kill -9 {os.getpid()}killall python3 -9 && python3 watchdog.py")
+    os.system(f"kill -9 {os.getpid()}killall python3 -9 && python3 watchdog.py") 
