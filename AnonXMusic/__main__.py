@@ -1,5 +1,6 @@
 import asyncio
 import importlib
+import logging
 
 from pyrogram import idle
 from pytgcalls.exceptions import NoActiveGroupCall
@@ -25,6 +26,11 @@ async def load_banned_users():
 @async_retry(retries=3, delay=2.0, exceptions=(Exception,))
 async def start_stream():
     await Anony.stream_call("https://te.legra.ph/file/29f784eb49d230ab62e9e.mp4")
+
+async def periodic_log():
+    while True:
+        logging.info("Bot is active")
+        await asyncio.sleep(30)
 
 async def init():
     if (
@@ -62,7 +68,7 @@ async def init():
         LOGGER("AnonXMusic").error(f"Error in stream call: {e}")
         
     await Anony.decorators()
-    await idle()
+    await asyncio.gather(idle(), periodic_log())
     await app.stop()
     LOGGER("AnonXMusic").info("Stopping AnonX Music Bot...")
 
