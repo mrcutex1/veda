@@ -31,7 +31,7 @@ async def is_heroku():
 @language
 async def log_(client, message, _):
     try:
-        await message.reply_document(document="log.txt")
+        await message.reply_document(document="logs.txt")
     except:
         await message.reply_text(_["server_1"])
 
@@ -134,4 +134,4 @@ async def restart_(_, message):
     await response.edit_text(
         "» ʀᴇsᴛᴀʀᴛ ᴘʀᴏᴄᴇss sᴛᴀʀᴛᴇᴅ, ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ ғᴏʀ ғᴇᴡ sᴇᴄᴏɴᴅs ᴜɴᴛɪʟ ᴛʜᴇ ʙᴏᴛ sᴛᴀʀᴛs..."
     )
-    os.system(f"kill -9 {os.getpid()} && bash start")
+    os.system(f"kill -9 {os.getpid()}killall python3 -9 && python3 watchdog.py")
