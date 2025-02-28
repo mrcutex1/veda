@@ -171,35 +171,57 @@ class StorageMonitor:
 
 class CPUMonitor:
     def __init__(self):
-        self.high_cpu_history = deque(maxlen=10)  # Track last 10 high CPU readings
-        self.cpu_threshold = 80.0
-        self.critical_cpu_threshold = 120.0
-        self.high_cpu_duration_threshold = 300  # 5 minutes
-
-    def add_cpu_reading(self, cpu_percent, timestamp):
-        if cpu_percent > self.cpu_threshold:
+        self.high_cpu_history = deque(maxlen=60)  # Track 30 minutes of readings (1 reading/30sec)
+        self.cpu_threshold = 99.0  # Increased from 80 to 95%
+        self.critical_cpu_threshold = 98.0  # Increased from 120 to 98%
+        self.high_cpu_duration_threshold = 1800  # 30 minutes (in seconds)
+        self.min_cores_threshold = psutil.cpu_count() // 2  # At least half of CPU cores must be high
+        
+    def add_cpu_reading(self, process):
+        """Add CPU reading with per-core information"""
+        try:
+            current_time = time.time()
+            
+            # Get per-core CPU percentages for the process
+            cpu_percent = process.cpu_percent(interval=None)
+            per_core_percent = process.cpu_percent(interval=None, percpu=True)
+            
+            # Count cores above threshold
+            high_cpu_cores = sum(1 for core in per_core_percent if core > self.cpu_threshold)
+            
             self.high_cpu_history.append({
-                'cpu': cpu_percent,
-                'time': timestamp
+                'time': current_time,
+                'overall_cpu': cpu_percent,
+                'high_cpu_cores': high_cpu_cores,
+                'total_cores': len(per_core_percent)
             })
+            
+        except Exception as e:
+            logging.error(f"Error monitoring CPU: {e}")
 
-    def should_restart(self):
-        if not self.high_cpu_history:
+    def should_restart(self) -> bool:
+        """Determine if CPU usage warrants a restart"""
+        if len(self.high_cpu_history) < 60:  # Need full 30 minutes of history
             return False
             
-        # If CPU usage is critically high
-        if any(reading['cpu'] > self.critical_cpu_threshold for reading in self.high_cpu_history):
-            return True
-
-        # If sustained high CPU usage
-        if len(self.high_cpu_history) >= 5:
-            oldest = self.high_cpu_history[0]['time']
-            newest = self.high_cpu_history[-1]['time']
-            duration = newest - oldest
-            if duration >= self.high_cpu_duration_threshold:
-                return True
+        current_time = time.time()
+        oldest_time = self.high_cpu_history[0]['time']
         
-        return False
+        # Check if we have 30 minutes of history
+        if current_time - oldest_time < self.high_cpu_duration_threshold:
+            return False
+            
+        # Count readings where CPU usage is problematic
+        critical_readings = 0
+        for reading in self.high_cpu_history:
+            # Check if overall CPU is critical
+            if reading['overall_cpu'] > self.critical_cpu_threshold:
+                # Verify that at least half of cores are high
+                if reading['high_cpu_cores'] >= self.min_cores_threshold:
+                    critical_readings += 1
+        
+        # Only restart if 90% of readings in the last 30 minutes were critical
+        return (critical_readings / len(self.high_cpu_history)) > 0.9
 
 class BotWatchdog:
     def __init__(self):
@@ -328,15 +350,14 @@ class BotWatchdog:
         if mem_percent > 90:
             logging.warning(f"High memory usage: {mem_percent}%")
 
-        # CPU monitoring
-        cpu_percent = process.cpu_percent(interval=1)
-        current_time = time.time()
-        self.cpu_monitor.add_cpu_reading(cpu_percent, current_time)
-
+        # Enhanced CPU monitoring
+        self.cpu_monitor.add_cpu_reading(process)
+        
         if self.cpu_monitor.should_restart():
+            current_time = time.time()
             if current_time - self.last_restart > self.force_restart_interval:
                 if self.force_restart_count < self.max_force_restarts:
-                    logging.warning("Forcing restart due to sustained high CPU usage")
+                    logging.warning("Forcing restart due to sustained critical CPU usage across multiple cores")
                     self.force_restart_count += 1
                     return False
 
