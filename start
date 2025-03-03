@@ -1,5 +1,7 @@
-echo "Starting Bot"
+echo "Fucking Junk"
 rm -rf __p*
 rm -f *.session
+sleep 1 
+echo "Starting Bot"
 python3 -m AnonXMusic
 #python3 watchdog.py
