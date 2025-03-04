@@ -83,14 +83,14 @@ autoclean = []
 confirmer = {}
 
 
-START_IMG_URL = ["https://iili.io/2rrDdfS.jpg",
-                 "https://iili.io/2rrDKJe.jpg",
-                 "https://te.legra.ph/file/58b491b39cee854695fa9.jpg",]
+START_IMG_URL = ["https://i.imgur.com/VJXBOzx.png",
+                 "https://i.imgur.com/VJXBOzx.png",
+                 "https://i.imgur.com/VJXBOzx.png",]
     
 PING_IMG_URL = getenv(
-    "PING_IMG_URL", "https://iili.io/2rrDKJe.jpg"
+    "PING_IMG_URL", "https://i.imgur.com/VJXBOzx.png"
 )
-PLAYLIST_IMG_URL = "https://iili.io/2rrDRdF.jpg"
+PLAYLIST_IMG_URL = "https://i.imgur.com/VJXBOzx.png"
 STATS_IMG_URL = "https://telegra.ph/file/edd388a42dd2c499fd868.jpg"
 TELEGRAM_AUDIO_URL = "https://telegra.ph/file/492a3bb2e880d19750b79.jpg"
 TELEGRAM_VIDEO_URL = "https://telegra.ph/file/492a3bb2e880d19750b79.jpg"
