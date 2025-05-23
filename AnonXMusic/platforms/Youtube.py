@@ -472,14 +472,14 @@ class YouTubeAPI:
         #     return None
 
 
-        ## New updated Method...
+        # New updated Method...
         def audio_dl(vid_id):
             try:
                 session = create_session()
                 
                 headers = {
                     "x-api-key": f"{YT_API_KEY}",
-                    "User-Agent": ruseragent
+                    "User-Agent": "Mozilla/5"
                 }
                 check = session.get(f"{YTPROXY}", headers=headers, timeout=20)
                 checked = res.json()
