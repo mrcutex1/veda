@@ -19,7 +19,6 @@ Clone the repo on VPS Secretly.
 
 ```
 git clone https://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@github.com/mrcutex1/amiop.git
-
 ```    
 
 Docker build on vps (DO NOT USE)
