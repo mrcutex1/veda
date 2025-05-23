@@ -482,8 +482,7 @@ class YouTubeAPI:
                     "User-Agent": "Mozilla/5"
                 }
                 check = session.get(f"{YTPROXY}", headers=headers, timeout=20)
-                checked = res.json()
-
+                checked = check.json()
                 if checked['status'] == 'success':
                     xyz = os.path.join("downloads", f"{vid_id}.mp3")
                     if os.path.exists(xyz):
@@ -493,7 +492,7 @@ class YouTubeAPI:
                     songData = getAudio.json()
                     songlink = songData['audio_url']
                     ## print(songlink)
-                    audio_url = base64.b64decode(audio_url).decode()
+                    audio_url = base64.b64decode(songlink).decode()
                     ydl_opts = get_ydl_opts(f"downloads/{vid_id}.mp3")
                     with ThreadPoolExecutor(max_workers=2) as executor:
                         future = executor.submit(lambda: yt_dlp.YoutubeDL(ydl_opts).download(audio_url))
