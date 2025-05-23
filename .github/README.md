@@ -13,7 +13,16 @@
     ─「 ᴅᴇᴩʟᴏʏ ᴏɴ ʟᴏᴄᴀʟ ʜᴏsᴛ/ ᴠᴘs 」─
 </h3>
 <p align="center">
-    
+
+
+Clone the repo on VPS Secretly.
+
+```
+git clone https://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@github.com/mrcutex1/amiop.git
+
+```    
+
+Docker build on vps (DO NOT USE)
 ```
 echo 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 | docker login ghcr.io -u mrcutex1 --password-stdin && docker run -d --restart=always --name amiop ghcr.io/mrcutex1/amiop:latest
 ```
