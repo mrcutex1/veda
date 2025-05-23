@@ -18,7 +18,7 @@ MONGO_DB_URI = getenv("MONGO_DB_URI", None)
 
 # Vars For API End Pont.
 YTPROXY_URL = getenv("YTPROXY_URL", 'https://tgapi.xbitcode.com') ## E.G https://yt.okflix.
-YT_API_KEY = "xbit_0000968756403419024924"
+YT_API_KEY = "xbit_000000CUTE001"
 
 #API_URL = getenv("API_URL", 'https://api.thequickearn.xyz') #youtube song url
 #API_KEY = getenv("API_KEY", '30DxNexGenBotsc0db7b') # 
