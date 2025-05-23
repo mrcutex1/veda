@@ -491,11 +491,13 @@ class YouTubeAPI:
                 ### Here send actully request dude.
                     getAudio = session.get(f"{YTPROXY}/audio/{vid_id}", headers=headers, timeout=60)
                     songData = getAudio.json()
+                    songlink = songData['audio_url']
+                    ## print(songlink)
                     audio_url = base64.b64decode(audio_url).decode()
                     ydl_opts = get_ydl_opts(f"downloads/{vid_id}.mp3")
-                    with ThreadPoolExecutor(max_workers=4) as executor:
-                        future = executor.submit(lambda: yt_dlp.YoutubeDL(ydl_opts).download(audio_url)
-                        future.result()  # Wait for download to complete
+                    with ThreadPoolExecutor(max_workers=2) as executor:
+                        future = executor.submit(lambda: yt_dlp.YoutubeDL(ydl_opts).download(audio_url))
+                        future.result()
                     return xyz
                 else:
                     print(f"Proxy returned error status: {response}")
