@@ -8,3 +8,6 @@ downloads/
 __pycache__/
 *.session-journal
 watchdog.log
+.venv/
+logs.txt
+unknown_errors.txt

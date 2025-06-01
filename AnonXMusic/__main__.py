@@ -14,6 +14,8 @@ from AnonXMusic.utils.database import get_banned_users, get_gbanned
 from AnonXMusic.utils.retry import async_retry
 from config import BANNED_USERS
 
+loop = asyncio.get_event_loop()
+
 @async_retry(retries=3, delay=2.0, exceptions=(Exception,))
 async def load_banned_users():
     users = await get_gbanned()
@@ -27,10 +29,6 @@ async def load_banned_users():
 async def start_stream():
     await Anony.stream_call("https://te.legra.ph/file/29f784eb49d230ab62e9e.mp4")
 
-async def periodic_log():
-    while True:
-        logging.info("Bot is active")
-        await asyncio.sleep(30)
 
 async def init():
     if (
@@ -68,9 +66,9 @@ async def init():
         LOGGER("AnonXMusic").error(f"Error in stream call: {e}")
         
     await Anony.decorators()
-    await asyncio.gather(idle(), periodic_log())
+    await idle()
     await app.stop()
     LOGGER("AnonXMusic").info("Stopping AnonX Music Bot...")
 
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(init())
+    loop.run_until_complete(init())

@@ -15,8 +15,8 @@ from pytgcalls import filters as fl
 from pytgcalls.types import AudioQuality, VideoQuality
 from pytgcalls.types import MediaStream,ChatUpdate
 
+from AnonXMusic.utils.stream.autoclear import auto_clean
 import config
-from config import autoclean
 from AnonXMusic import LOGGER, YouTube, app
 from AnonXMusic.misc import db
 from AnonXMusic.utils.database import (
@@ -248,7 +248,7 @@ class Call(PyTgCalls):
                 video_parameters=VideoQuality.SD_480p,
             )
         else:
-            stream = MediaStream(link, audio_parameters=AudioQuality.HIGH,video_flags=MediaStream.Flags.IGNORE, ytdlp_parameters=f"--cookies {cookie_txt_file()}")
+            stream = MediaStream(link, audio_parameters=AudioQuality.HIGH,video_flags=MediaStream.Flags.IGNORE)
         await assistant.play(
             chat_id,
             stream,
@@ -307,7 +307,7 @@ class Call(PyTgCalls):
                     
                 )
                 if video
-                else MediaStream(link, audio_parameters=AudioQuality.HIGH,video_flags=MediaStream.Flags.IGNORE, ytdlp_parameters=f"--cookies {cookie_txt_file()}")
+                else MediaStream(link, audio_parameters=AudioQuality.HIGH,video_flags=MediaStream.Flags.IGNORE)
             )
         try:
             await assistant.play(
@@ -341,8 +341,7 @@ class Call(PyTgCalls):
                 loop = loop - 1
                 await set_loop(chat_id, loop)
             if popped:
-                rem = popped["file"]
-                autoclean.remove(rem)
+                await auto_clean(popped)
             if not check:
                 await _clear_(chat_id)
                 return await client.leave_call(chat_id)
@@ -387,7 +386,7 @@ class Call(PyTgCalls):
                     stream = MediaStream(
                         link,
                         audio_parameters=AudioQuality.HIGH,
-                        ytdlp_parameters=f"--cookies {cookie_txt_file()}"
+                        video_flags=MediaStream.Flags.IGNORE
                     )
                 try:
                     await client.play(chat_id, stream)
@@ -434,7 +433,7 @@ class Call(PyTgCalls):
                     stream = MediaStream(
                         file_path,
                         audio_parameters=AudioQuality.HIGH,
-                        ytdlp_parameters=f"--cookies {cookie_txt_file()}"
+                        video_flags=MediaStream.Flags.IGNORE
                     )
                 try:
                     await client.play(chat_id, stream)
@@ -467,7 +466,7 @@ class Call(PyTgCalls):
                         video_parameters=VideoQuality.SD_480p,
                     )
                     if str(streamtype) == "video"
-                    else MediaStream(videoid, audio_parameters=AudioQuality.HIGH, ytdlp_parameters=f"--cookies {cookie_txt_file()}")
+                    else MediaStream(videoid, audio_parameters=AudioQuality.HIGH, video_flags=MediaStream.Flags.IGNORE)
                 )
                 try:
                     await client.play(chat_id, stream)
@@ -496,7 +495,7 @@ class Call(PyTgCalls):
                     stream = MediaStream(
                         queued,
                         audio_parameters=AudioQuality.HIGH,
-                        ytdlp_parameters=f"--cookies {cookie_txt_file()}"
+                        video_flags=MediaStream.Flags.IGNORE
                     )
                 try:
                     await client.play(chat_id, stream)
