@@ -48,7 +48,7 @@ GIT_TOKEN = getenv(
 )  # Fill this variable if your upstream repository is private
 
 SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/Ace_networkop")
-SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/amigr8")
+SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/stranger_support")
 
 # Set this to True if you want the assistant to automatically leave chats after an interval
 AUTO_LEAVING_ASSISTANT = bool(getenv("AUTO_LEAVING_ASSISTANT", True))
@@ -88,23 +88,22 @@ autoclean = []
 confirmer = {}
 
 
-START_IMG_URL = ["https://i.imgur.com/VJXBOzx.png",
-                 "https://i.imgur.com/VJXBOzx.png",
-                 "https://i.imgur.com/VJXBOzx.png",]
+START_IMG_URL = ["https://ibb.co/B5xPnhGC",
+                 "https://ibb.co/B5xPnhGC",]
     
 PING_IMG_URL = getenv(
-    "PING_IMG_URL", "https://i.imgur.com/VJXBOzx.png"
+    "PING_IMG_URL", "https://ibb.co/B5xPnhGC"
 )
-PLAYLIST_IMG_URL = "https://i.imgur.com/VJXBOzx.png"
-STATS_IMG_URL = "https://telegra.ph/file/edd388a42dd2c499fd868.jpg"
-TELEGRAM_AUDIO_URL = "https://telegra.ph/file/492a3bb2e880d19750b79.jpg"
-TELEGRAM_VIDEO_URL = "https://telegra.ph/file/492a3bb2e880d19750b79.jpg"
-STREAM_IMG_URL = "https://graph.org/file/ff2af8d4d10afa1baf49e.jpg"
-SOUNCLOUD_IMG_URL = "https://graph.org/file/c95a687e777b55be1c792.jpg"
-YOUTUBE_IMG_URL = "https://graph.org/file/e8730fdece86a1166f608.jpg"
-SPOTIFY_ARTIST_IMG_URL = "https://graph.org/file/0bb6f36796d496b4254ff.jpg"
-SPOTIFY_ALBUM_IMG_URL = "https://graph.org/file/0bb6f36796d496b4254ff.jpg"
-SPOTIFY_PLAYLIST_IMG_URL = "https://graph.org/file/0bb6f36796d496b4254ff.jpg"
+PLAYLIST_IMG_URL = "https://ibb.co/B5xPnhGC"
+STATS_IMG_URL = "https://ibb.co/B5xPnhGC"
+TELEGRAM_AUDIO_URL = "https://ibb.co/B5xPnhGC"
+TELEGRAM_VIDEO_URL = "https://ibb.co/B5xPnhGC"
+STREAM_IMG_URL = "https://ibb.co/B5xPnhGC"
+SOUNCLOUD_IMG_URL = "https://ibb.co/B5xPnhGC"
+YOUTUBE_IMG_URL = "https://ibb.co/B5xPnhGC"
+SPOTIFY_ARTIST_IMG_URL = "https://ibb.co/B5xPnhGC"
+SPOTIFY_ALBUM_IMG_URL = "https://ibb.co/B5xPnhGC"
+SPOTIFY_PLAYLIST_IMG_URL = "https://ibb.co/B5xPnhGC"
 
 if SUPPORT_CHANNEL:
     if not re.match("(?:http|https)://", SUPPORT_CHANNEL):
