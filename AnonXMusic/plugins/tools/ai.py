@@ -17,7 +17,7 @@ import subprocess
 import random
 import logging
 
-AI_COMMANDS = ["ai", "/ai", "ami", "/ami", "gpt", "/gpt", "chatgpt", "/gpt4", "gemini", "/gok"]
+AI_COMMANDS = ["ai", "/ai", "gpt", "/gpt", "chatgpt", "/gpt4", "gemini"]
 
 INSTANT_REPLIES = [
     "Hey there! How can I help you today?",
