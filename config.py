@@ -47,11 +47,11 @@ GIT_TOKEN = getenv(
     "GIT_TOKEN", None
 )  # Fill this variable if your upstream repository is private
 
-SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/Ace_networkop")
-SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/stranger_support")
+SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/+Qg2LiMtmDE41ZDc1")
+SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/+44mwCjjudxYwYmE8")
 
 # Set this to True if you want the assistant to automatically leave chats after an interval
-AUTO_LEAVING_ASSISTANT = bool(getenv("AUTO_LEAVING_ASSISTANT", True))
+AUTO_LEAVING_ASSISTANT = bool(getenv("AUTO_LEAVING_ASSISTANT", False))
 ASSISTANT_LEAVE_TIME = int(getenv("ASSISTANT_LEAVE_TIME",  6400))
 
 
@@ -69,7 +69,7 @@ TG_AUDIO_FILESIZE_LIMIT = int(getenv("TG_AUDIO_FILESIZE_LIMIT", 52428800))
 TG_VIDEO_FILESIZE_LIMIT = int(getenv("TG_VIDEO_FILESIZE_LIMIT", 20971520))
 # Checkout https://www.gbmb.org/mb-to-bytes for converting mb to bytes
 
-PRIVATE_BOT_MODE_MEM = int(getenv("PRIVATE_BOT_MODE_MEM", 5))
+PRIVATE_BOT_MODE_MEM = int(getenv("PRIVATE_BOT_MODE_MEM", 0))
 
 
 # Get your pyrogram v2 session from @StringFatherBot on Telegram
@@ -88,22 +88,22 @@ autoclean = []
 confirmer = {}
 
 
-START_IMG_URL = ["https://ibb.co/B5xPnhGC",
-                 "https://ibb.co/B5xPnhGC",]
+START_IMG_URL = ["https://ibb.co/qLjnHJpz",
+                 "https://ibb.co/qLjnHJpz",]
     
 PING_IMG_URL = getenv(
-    "PING_IMG_URL", "https://ibb.co/B5xPnhGC"
+    "PING_IMG_URL", "https://ibb.co/qLjnHJpz"
 )
-PLAYLIST_IMG_URL = "https://ibb.co/B5xPnhGC"
-STATS_IMG_URL = "https://ibb.co/B5xPnhGC"
-TELEGRAM_AUDIO_URL = "https://ibb.co/B5xPnhGC"
-TELEGRAM_VIDEO_URL = "https://ibb.co/B5xPnhGC"
-STREAM_IMG_URL = "https://ibb.co/B5xPnhGC"
-SOUNCLOUD_IMG_URL = "https://ibb.co/B5xPnhGC"
-YOUTUBE_IMG_URL = "https://ibb.co/B5xPnhGC"
-SPOTIFY_ARTIST_IMG_URL = "https://ibb.co/B5xPnhGC"
-SPOTIFY_ALBUM_IMG_URL = "https://ibb.co/B5xPnhGC"
-SPOTIFY_PLAYLIST_IMG_URL = "https://ibb.co/B5xPnhGC"
+PLAYLIST_IMG_URL = "https://ibb.co/qLjnHJpz"
+STATS_IMG_URL = "https://ibb.co/qLjnHJpz"
+TELEGRAM_AUDIO_URL = "https://ibb.co/qLjnHJpz"
+TELEGRAM_VIDEO_URL = "https://ibb.co/qLjnHJpz"
+STREAM_IMG_URL = "https://ibb.co/qLjnHJpz"
+SOUNCLOUD_IMG_URL = "https://ibb.co/qLjnHJpz"
+YOUTUBE_IMG_URL = "https://ibb.co/qLjnHJpz"
+SPOTIFY_ARTIST_IMG_URL = "https://ibb.co/qLjnHJpz"
+SPOTIFY_ALBUM_IMG_URL = "https://ibb.co/qLjnHJpz"
+SPOTIFY_PLAYLIST_IMG_URL = "https://ibb.co/qLjnHJpz"
 
 if SUPPORT_CHANNEL:
     if not re.match("(?:http|https)://", SUPPORT_CHANNEL):
